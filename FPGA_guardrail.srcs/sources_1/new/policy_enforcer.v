@@ -22,6 +22,7 @@
 
 module policy_enforcer(
     input wire clk, 
+    input wire rst,
     input wire rx_done, //Pulse when new byte arrive from re
     input wire [7:0] data_in, //Incoming ASCII char
     input wire match_assert, //High if pattern matcher detects threat
@@ -35,9 +36,12 @@ module policy_enforcer(
     reg tripped = 0;
     
     always @(posedge clk) begin
-        //Latching Memory
-        if (match_assert == 1) begin
-            tripped <= 1;
+        //Latching Memory w/ new reset priority
+        if (rst == 1) begin
+            tripped <= 0; //Clear threat when button pushed
+        
+        end else if (match_assert == 1) begin
+            tripped <= 1; //Latch threat
         end
         
         //Route internal memory state to output wire (red LED)

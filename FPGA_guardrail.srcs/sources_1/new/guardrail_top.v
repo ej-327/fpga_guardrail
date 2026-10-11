@@ -22,6 +22,7 @@
 
 module guardrail_top(
     input wire clk, //100 MHz system clock
+    input wire btnC, //New Push Button
     input wire RsRx, //USB-UART Receive pin
     output wire RsTx, //USB-UART Transmit pin
     output wire [15:0] led, //16 physical LEDs on board
@@ -64,6 +65,7 @@ module guardrail_top(
     //Hardware Kill-Switch
     policy_enforcer enforcer (
         .clk(clk),
+        .rst(btnC), //Wire physical button to reset pin
         .rx_done(rx_done),
         .data_in(rx_data),
         .match_assert(match_assert),
