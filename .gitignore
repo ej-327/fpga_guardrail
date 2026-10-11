@@ -1,3 +1,4 @@
+# Ignore Vivado temporary and build files
 *.jou
 *.log
 *.str
