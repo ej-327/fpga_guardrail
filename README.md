@@ -1,8 +1,8 @@
 # FPGA Hardware Guardrail
 
-This hardware security coprocessor was built by me in order to explore the advantageous of physical and wire speed filtering for Large Language Model (LLM) type text streams simulated through a python script. Software based filters process strings in sequence, which poorly scales and adds unpredictable latency spikes. The goal of this experiment is to completely bypass the CPU's sequential processing by using an AMD Artix-7 FPGA, it intercepts USB-UART characters and drops malicious prompt injections with zero clock cycle processing delay or O(1) latency.
+This hardware security coprocessor was built by me in order to explore the advantages of physical and wire speed filtering for Large Language Model (LLM) type text streams simulated through a Python script. Software based filters process strings in sequence, which poorly scales and adds unpredictable latency spikes. The goal of this experiment is to completely bypass the CPU's sequential processing by using an AMD Artix-7 FPGA. It intercepts USB-UART characters and drops malicious prompt injections with zero clock cycle processing delay or O(1) latency.
 
-In order for the the FPGA to receive data, the board has to take in raw ASCII characters over a USB cable, shift them through a 16-byte rolling window, and check the text against hardcoded blacklisted patterns with the use of pure combinational logic. Once a prompt injection vector is detected("SYSTEM:" or "IGNORE"), or private data such as an SSN, a hardware kill switch drops, dropping a payload and masking remaining outbound characters with asterisks. This triggers all 16 LEDs to turn on, and a INJ1 message appears on the Basys 3's 7-segment display. It remains in a locked state until a physical reset button (btnC) is pushed.
+In order for the FPGA to receive data, the board has to take in raw ASCII characters over a USB cable, shift them through a 16-byte rolling window, and check the text against hardcoded blacklisted patterns with the use of pure combinational logic. Once a prompt injection vector is detected ("SYSTEM:" or "IGNORE"), or private data such as an SSN, a hardware kill switch trips, dropping a payload and masking remaining outbound characters with asterisks. This triggers all 16 LEDs to turn on, and an INJ1 message appears on the Basys 3's 7-segment display. It remains in a locked state until a physical reset button (btnC) is pushed.
 
 
 ## Hardware Specs & Performance
@@ -28,10 +28,10 @@ Metrics sourced directly from Vivado Implementation Report targeting Digilent Ba
 
 ## Verilog Modules & Software
 
-* **uart_rx.v & uart_tx.v**: Wrote the serial communication backcone in order to handle 115200 baud transfers of data.
+* **uart_rx.v & uart_tx.v**: Wrote the serial communication backbone in order to handle 115200 baud transfers of data.
 * **pattern_matcher.v**: Main intelligence core. Has a rolling history containing the most recent 16 bytes. Parallel combinational gates monitor these bytes for suspicious prompt injections such as "IGNORE" and "SYSTEM:", while also watching for sensitive data such as structured numeric PII patterns like mock SSNs.
-* **policy_enforcer.v**: Circuit breaker. If text remains clean, bytes route to the TX buffer back to the host. If a threat is percieved, an internal register will latch high, dropping the entire packet and replacing it with a 8'h2A error token.
-* **seven_seg.v**: Translates statee into multiplexed signals to drive the FPGA's 4-digit display to throw a SAFE is text is clean or INJ1 if text is suspected as a threat.
+* **policy_enforcer.v**: Circuit breaker. If text remains clean, bytes route to the TX buffer back to the host. If a threat is perceived, an internal register will latch high, dropping the entire packet and replacing it with an 8'h2A error token.
+* **seven_seg.v**: Translates state into multiplexed signals to drive the FPGA's 4-digit display to throw a SAFE if text is clean or INJ1 if text is suspected as a threat.
 * **guardrail_top.v & Basys3_Master.xdc**: Master Hardware wrapper. Wires all submodules together and maps them to silicon pins on the FPGA.
 * **host_llm_streamer.py**: Python script running from host PC, using pyserial library. Feeds a mock AI text string into the board with delays in order to verify physical drop multiplexer and real time reset logic.
 
