@@ -6,3 +6,4 @@
 *.bit
 .Xil/
 project_*/
+FPGA_guardrail*
